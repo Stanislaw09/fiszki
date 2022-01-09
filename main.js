@@ -23,13 +23,43 @@ class Flashcard {
 	}
 }
 
-class SimpleFlashcarde extends Flashcard {
+class SimpleFlashcard extends Flashcard {
 	constructor(original, translation) {
 		super(original, translation);
 	}
 
 	flip() {
-		console.log("flippin");
+		[this._word.original, this._word.translation] = [this._word.translation, this._word.original];
+	}
+
+	render(active, rerender) {
+		const div = document.createElement("div");
+		div.className = "carousel-item";
+
+		const innerDiv = document.createElement("div");
+		innerDiv.style = "carousel-caption d-none d-md-block";
+		innerDiv.style.display = "grid";
+		innerDiv.style["justify-content"] = "center";
+
+		const h5 = document.createElement("h5");
+		h5.innerHTML = this._word.original;
+
+		const button = document.createElement("button");
+		button.className = "btn btn-secondary";
+		button.id = "flashcardBtn";
+		button.innerHTML = "Flip";
+
+		button.addEventListener("click", () => {
+			this.flip();
+			rerender();
+		});
+
+		innerDiv.appendChild(h5);
+		innerDiv.appendChild(button);
+		div.appendChild(innerDiv);
+		active && div.classList.add("active");
+
+		return div;
 	}
 }
 
@@ -42,25 +72,66 @@ class TextFlashcard extends Flashcard {
 		console.log("taking input: ", input);
 	}
 
-	checkAnswer(answer) {
-		return this._word.translation === answer;
+	checkAnswer() {
+		const answer = document.getElementById("inputAnswer").value;
+		console.log(this._word.translation === answer.toLowerCase());
+	}
+
+	render(active) {
+		const wrapper = document.createElement("div");
+		wrapper.className = "card text-center";
+		wrapper.style = "width: 18rem;";
+
+		const h5 = document.createElement("h5");
+		h5.style = "card-title";
+		h5.innerHTML = this._word.original;
+
+		const div = document.createElement("div");
+		div.className = "input-group mb-3";
+
+		const input = document.createElement("input");
+		input.type = "text";
+		input.className = "form-control";
+		input.placeholder = "type answer";
+		input.id = "inputAnswer";
+
+		const btn = document.createElement("button");
+		btn.className = "btn btn-outline-secondary";
+		btn.type = "button";
+		btn.id = "button-addon2";
+		btn.innerHTML = "check";
+
+		div.appendChild(input);
+		div.appendChild(btn);
+		wrapper.appendChild(h5);
+		wrapper.appendChild(div);
+
+		btn.addEventListener("click", () => this.checkAnswer());
+
+		document.getElementById("root").firstChild.remove();
+		document.getElementById("root").appendChild(wrapper);
 	}
 }
 
 class Game {
-	constructor(words) {
-		this._flashcards = words.map(word => new Flashcard(word.original, word.translation));
-		this._timer = 0;
-		//dunno wheter list of words will be needed
-	}
+	constructor(words, type) {
+		this.flashcards = [];
+		this.words = words;
+		this.type = type;
 
-	count(range) {
-		console.log(this._timer);
-		range > this._timer &&
-			setTimeout(() => {
-				this._timer = this._timer + 1;
-				this.count(range);
-			}, 1000);
+		this.getFlashcards();
+
+		this._timer = 0;
+		this._current = 0;
+
+		document.querySelector(".carousel-control-prev").addEventListener("click", () => {
+			this._current === 0 ? (this._current = 1) : this._current--;
+			this._current %= 2;
+		});
+		document.querySelector(".carousel-control-next").addEventListener("click", () => {
+			this._current++;
+			this._current %= 2;
+		});
 	}
 
 	init() {
@@ -70,12 +141,26 @@ class Game {
 	play() {
 		console.log("lets play");
 	}
+
+	getFlashcards() {
+		if (this.type === 1)
+			this.flashcards = this.words.map(word => new SimpleFlashcard(word.original, word.translation));
+		else this.flashcards = this.words.map(word => new TextFlashcard(word.original, word.translation));
+	}
+
+	render() {
+		const cards = this.flashcards.map((card, i) => {
+			return card.render(i === this._current, () => this.render());
+		});
+
+		document.querySelector(".carousel-inner").innerHTML = "";
+		document.querySelector(".carousel-inner").append(...cards);
+	}
 }
 
 class LearnGame extends Game {
-	constructor(words) {
-		super(words);
-		this._current = 0;
+	constructor(words, type) {
+		super(words, type);
 	}
 
 	prev() {
@@ -88,10 +173,20 @@ class LearnGame extends Game {
 }
 
 class PointGame extends Game {
-	constructor(words, time) {
-		super(words);
-		this._time = time;
+	constructor(words, type, range) {
+		super(words, type);
+		this.counter = 0;
 		this.score = 0;
+		this.count(range);
+	}
+
+	count(range) {
+		range > this.counter &&
+			setTimeout(() => {
+				this.counter++;
+				document.querySelector("#timer").innerHTML = this.counter;
+				this.count(range);
+			}, 1000);
 	}
 
 	updateScore(newScore) {
@@ -99,25 +194,13 @@ class PointGame extends Game {
 	}
 }
 
-// const fish1 = new TextFlashcard("cat", "kot");
-// fish1.animate();
-// console.log(fish1.checkAnswer("kot"));
-
-const game1 = new Game([
-	{original: "cat", translation: "kot"},
-	{original: "ferret", translation: "fretka"},
-]);
-
-// game1.count(10);
-
 const game2 = new PointGame(
 	[
 		{original: "cat", translation: "kot"},
 		{original: "ferret", translation: "fretka"},
 	],
+	1,
 	10
 );
 
-console.log(game2.score);
-game2.updateScore(20);
-console.log(game2.score);
+game2.render();
