@@ -17,10 +17,6 @@ class Flashcard {
 	get word() {
 		return this._word;
 	}
-
-	animate() {
-		console.log(this._word.original, "means", this._word.translation);
-	}
 }
 
 class SimpleFlashcard extends Flashcard {
@@ -68,32 +64,31 @@ class TextFlashcard extends Flashcard {
 		super(original, translation);
 	}
 
-	takeInput(input) {
-		console.log("taking input: ", input);
-	}
-
 	checkAnswer() {
-		const answer = document.getElementById("inputAnswer").value;
+		const answer = document.querySelector(".activeInput").value;
 		console.log(this._word.translation === answer.toLowerCase());
 	}
 
-	render(active) {
-		const wrapper = document.createElement("div");
-		wrapper.className = "card text-center";
-		wrapper.style = "width: 18rem;";
+	render(active, rerender) {
+		const div = document.createElement("div");
+		div.className = "carousel-item";
+
+		const innerDiv = document.createElement("div");
+		innerDiv.style = "carousel-caption d-none d-md-block";
+		innerDiv.style.display = "grid";
+		innerDiv.style["justify-content"] = "center";
 
 		const h5 = document.createElement("h5");
-		h5.style = "card-title";
 		h5.innerHTML = this._word.original;
 
-		const div = document.createElement("div");
-		div.className = "input-group mb-3";
+		const wrapper = document.createElement("div");
+		wrapper.className = "input-group mb-3";
 
 		const input = document.createElement("input");
 		input.type = "text";
 		input.className = "form-control";
 		input.placeholder = "type answer";
-		input.id = "inputAnswer";
+		active && input.classList.add("activeInput");
 
 		const btn = document.createElement("button");
 		btn.className = "btn btn-outline-secondary";
@@ -101,15 +96,20 @@ class TextFlashcard extends Flashcard {
 		btn.id = "button-addon2";
 		btn.innerHTML = "check";
 
-		div.appendChild(input);
-		div.appendChild(btn);
-		wrapper.appendChild(h5);
-		wrapper.appendChild(div);
+		btn.addEventListener("click", () => {
+			this.checkAnswer();
+			rerender();
+		});
 
-		btn.addEventListener("click", () => this.checkAnswer());
+		wrapper.appendChild(input);
+		wrapper.appendChild(btn);
 
-		document.getElementById("root").firstChild.remove();
-		document.getElementById("root").appendChild(wrapper);
+		innerDiv.appendChild(h5);
+		innerDiv.appendChild(wrapper);
+		div.appendChild(innerDiv);
+		active && div.classList.add("active");
+
+		return div;
 	}
 }
 
@@ -118,20 +118,30 @@ class Game {
 		this.flashcards = [];
 		this.words = words;
 		this.type = type;
-
-		this.getFlashcards();
-
 		this._timer = 0;
 		this._current = 0;
 
-		document.querySelector(".carousel-control-prev").addEventListener("click", () => {
-			this._current === 0 ? (this._current = 1) : this._current--;
-			this._current %= 2;
-		});
-		document.querySelector(".carousel-control-next").addEventListener("click", () => {
-			this._current++;
-			this._current %= 2;
-		});
+		this.getFlashcards();
+
+		document.querySelector(".carousel-control-prev").addEventListener("click", () => this.prev());
+		document.querySelector(".carousel-control-next").addEventListener("click", () => this.next());
+	}
+
+	next() {
+		this._current++;
+		this._current %= this.words.length;
+		setTimeout(() => {
+			this.render();
+		}, 500);
+	}
+
+	prev() {
+		this._current += this.words.length;
+		this._current--;
+		this._current %= this.words.length;
+		setTimeout(() => {
+			this.render();
+		}, 500);
 	}
 
 	init() {
@@ -198,9 +208,11 @@ const game2 = new PointGame(
 	[
 		{original: "cat", translation: "kot"},
 		{original: "ferret", translation: "fretka"},
+		{original: "necrosis", translation: "martwica"},
+		{original: "bereavement", translation: "zaloba"},
 	],
-	1,
-	10
+	1, //can be 1 for flip cards or sth else (eg 0) for text card
+	10 //time counter, for now does nothing
 );
 
 game2.render();
