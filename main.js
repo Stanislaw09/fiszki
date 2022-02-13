@@ -102,7 +102,7 @@ class TextFlashcard extends Flashcard {
 		const btn = document.createElement("button");
 		btn.className = "btn btn-outline-secondary";
 		btn.type = "button";
-		btn.id = "button-addon2";
+		// btn.id = "button-addon2";
 		btn.innerHTML = "check";
 
 		btn.addEventListener("click", () => {
@@ -229,8 +229,7 @@ class PointGame extends Game {
 		this.counter = 0;
 		this.range = 10;
 		document.querySelector("#counter_input").addEventListener("change", this.handleCounterChange);
-		this.enableOrDisableCheckButton()
-		setTimeout(this.enableOrDisableCheckButton,700)
+		setTimeout(this.enableOrDisableCheckButton.bind(this),10)
 	}
 
 	getFlashcards() {
@@ -271,15 +270,16 @@ class PointGame extends Game {
 	}
 
 	play() {
-		this.playing = true
 		super.initialize()
+		
+		this.playing = true
 		document.querySelector(".carousel-control-prev").style.display = "none"
 		document.querySelector(".carousel-control-next").style.display = "none"
 		document.getElementById("newWordForm").style.display = "none";
 		document.getElementById("counter_input").disabled=true;
 		document.querySelector(".carousel-control-next").style.display = "block"
 		this.count()
-		setTimeout(this.enableOrDisableCheckButton,200)
+		setTimeout(this.enableOrDisableCheckButton.bind(this),10)
 	}
 
 	next() {
@@ -302,9 +302,7 @@ class PointGame extends Game {
 	}
 }
 
-let game = new LearnGame();
-
-game.render();
+let game = null;
 
 const handleNewFlashcard = e => {
 	e.preventDefault();
@@ -336,6 +334,8 @@ const changeMode = mode => {
 	game.render();
 	document.getElementById("playButton").disabled = false;
 };
+
+changeMode("learn");
 
 document.getElementById("newWordForm").addEventListener("submit", handleNewFlashcard);
 document.getElementById("learnButton").addEventListener("click", () => {
