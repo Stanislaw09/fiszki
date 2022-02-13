@@ -160,15 +160,10 @@ class Game {
 		}, 500);
 	}
 
-	init() {
-		console.log("initialize the game");
-	}
-
 	play() {
 		console.log("lets play");
 		document.getElementById("newWordForm").style.display = "none";
 		document.getElementById("counter_input").disabled=true;
-
 	}
 
 	getFlashcards() {
@@ -186,7 +181,6 @@ class Game {
 			return card.render(i === this._current, () => this.render());
 		});
 		
-		// console.log(this.correct, this.wrong)
 		document.querySelector('#correct-answers').innerHTML=this.correct
 		document.querySelector('#wrong-answers').innerHTML=this.wrong
 
@@ -228,7 +222,6 @@ class PointGame extends Game {
 		super();
 		this.counter = 0;
 		this.range = 10;
-		document.querySelector("#counter_input").addEventListener("change", this.handleCounterChange);
 		setTimeout(this.enableOrDisableCheckButton.bind(this),10)
 	}
 
@@ -244,7 +237,6 @@ class PointGame extends Game {
 			Math.min(document.querySelector("#counter_input").value, 60),
 			2
 		);
-		console.log(this.range);
 	}
 
 	count() {
@@ -254,10 +246,11 @@ class PointGame extends Game {
 
 				document.querySelector(".carousel-control-next").click();
 			} else {
-				alert(`Koniec Gry!\n${this.correct} dobrych odpowiedzi\n${this.wrong} złych odpowiedzi\n${this.correct/this.flashcards.length}% opanowania materiału`)
+				alert(`Koniec Gry!\n${this.correct} dobrych odpowiedzi\n${this.wrong} złych odpowiedzi\n${this.correct/this.flashcards.length*100}% opanowania materiału`)
 				window.location.reload();
 			}
 		}
+
 		setTimeout(() => {
 			this.counter++;
 			document.querySelector("#timer").innerHTML = this.range-this.counter;
@@ -278,23 +271,25 @@ class PointGame extends Game {
 		document.getElementById("newWordForm").style.display = "none";
 		document.getElementById("counter_input").disabled=true;
 		document.querySelector(".carousel-control-next").style.display = "block"
+
+      this.handleCounterChange()
 		this.count()
 		setTimeout(this.enableOrDisableCheckButton.bind(this),10)
 	}
 
 	next() {
-		
 		super.next()
 		this.counter = 0
 	}
+
 	prev() {
-		
 		super.prev()
 		this.counter = 0
 	}
 
 	render() {
 		super.render()
+
 		if(this.playing){
 			document.querySelector(".carousel-control-next").style.display = (this._current === this.flashcards.length-1)?"none":"block"
 			
@@ -306,16 +301,20 @@ let game = null;
 
 const handleNewFlashcard = e => {
 	e.preventDefault();
-	const newWord = new Word(
-		document.getElementById("word_original").value,
-		document.getElementById("word_translation").value
-	);
-	game.addWord(newWord);
+   const original=document.getElementById("word_original").value
+   const translation=document.getElementById("word_translation").value
+   
+   if(original.length!=0 && translation.length!=0){
+	   const newWord = new Word(original, translation);
+      game.addWord(newWord);
+   }
+
 	e.target.reset();
 };
 
 const changeMode = mode => {
 	delete game;
+
 	switch (mode) {
 		case "learn":
 			game = new LearnGame();
@@ -330,6 +329,7 @@ const changeMode = mode => {
 		default:
 			console.error("Thats a problem");
 	}
+
 	game.getFlashcards();
 	game.render();
 	document.getElementById("playButton").disabled = false;
