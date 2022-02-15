@@ -256,8 +256,11 @@ class PointGame extends Game {
       if (this.range <= this.#counter) {
          this.#counter = 0;
          if (this._current != this.flashcards.length - 1) {
-
-            document.querySelector(".carousel-control-next").click();
+			try {
+			document.querySelector(".carousel-control-next").click() 
+			} catch(e) {
+			//   nothing to see here
+			}
          } else {
             alert(`Koniec Gry!\n${this.correct} dobrych odpowiedzi\n${this.wrong} złych odpowiedzi\n${this.correct / this.flashcards.length * 100}% opanowania materiału`)
             window.location.reload();
