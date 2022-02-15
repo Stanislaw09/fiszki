@@ -71,12 +71,20 @@ class TextFlashcard extends Flashcard {
    checkAnswer() {
       const answer = document.querySelector(".activeInput").value;
       if (this.word.translation === answer.toLowerCase()) {
-         document.querySelector("#answer-input").style.border = "3px solid green";
+         document.querySelector(".active #answer-input").style.border = "3px solid green";
          this.isCorrect = 1;
       } else {
-         document.querySelector("#answer-input").style.border = "2px solid red";
+         document.querySelector(".active #answer-input").style.border = "2px solid red";
          this.isCorrect = 0;
       }
+	  setTimeout(() => { 
+		  try {
+			document.querySelector(".carousel-control-next").click() 
+		  } catch(e) {
+			//   nothing to see here
+		  }
+
+	  }, 800)
    }
 
    render(active, rerender, correct, wrong) {
